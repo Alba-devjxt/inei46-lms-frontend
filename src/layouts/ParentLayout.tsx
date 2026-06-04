@@ -1,4 +1,4 @@
-import { Outlet, useLocation } from 'react-router-dom'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import {
   LayoutDashboard,
@@ -25,6 +25,7 @@ const parentNav: NavItem[] = [
 
 export default function ParentLayout() {
   const location = useLocation()
+  const navigate = useNavigate()
   const breadcrumb = parentNav.find((n) => location.pathname.startsWith(n.to))?.label ?? 'Resumen'
   const auth = loadAuth()
   const [notifications, setNotifications] = useState<NotificacionDTO[]>([])
@@ -53,6 +54,26 @@ export default function ParentLayout() {
     if (!menuOpen) return
     loadNotifications()
   }, [menuOpen, auth])
+
+  const handleNotificationClick = async (notification: NotificacionDTO) => {
+    // Marcar notificación como leída
+    if (!notification.leido) {
+      try {
+        await api.marcarNotificacionLeida(notification.id)
+      } catch (err) {
+        console.error('Error marcando notificación como leída:', err)
+      }
+    }
+
+    // Navegar según el tipo de notificación
+    if (notification.tipo === 'matricula') {
+      navigate('/padre/solicitudes-matricula')
+    }
+
+    // Cerrar el dropdown y actualizar notificaciones
+    setMenuOpen(false)
+    loadNotifications()
+  }
 
   return (
     <div className="flex h-screen w-screen bg-surface-muted overflow-hidden">
@@ -119,6 +140,7 @@ export default function ParentLayout() {
                         notifications.map((notification) => (
                           <div
                             key={notification.id}
+                            onClick={() => handleNotificationClick(notification)}
                             className={`px-4 py-3 border-b border-border-soft cursor-pointer hover:bg-gray-50 transition-colors ${
                               notification.leido ? 'bg-white' : 'bg-[#FFF5F5]'
                             }`}
