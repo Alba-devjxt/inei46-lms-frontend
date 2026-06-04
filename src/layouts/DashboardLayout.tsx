@@ -115,7 +115,7 @@ export default function DashboardLayout() {
                           disabled={loadingNotifs}
                           className="text-xs text-inei-600 hover:text-inei-700 disabled:opacity-50"
                         >
-                          {loadingNotifs ? 'Cargando...' : 'Actualizar'}
+                          Actualizar
                         </button>
                       </div>
                     </div>
