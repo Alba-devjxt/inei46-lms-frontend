@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Bell, Trophy, FileText, CalendarCheck, BookOpen, AlarmClock, MapPin, Book } from 'lucide-react'
-import { api, loadAuth, type MiCurso, type MiResumen, type MiTareaDTO } from '../lib/api'
+import { api, loadAuth, type MiCurso, type MiResumen, type MiTareaDTO, type CalificacionDTO } from '../lib/api'
 
 const COLORES_CURSO = ['#C8102E', '#1A1A1A', '#C8102E', '#1A1A1A']
 
@@ -9,6 +9,7 @@ export default function VistaEstudiante() {
   const [cursos, setCursos] = useState<MiCurso[]>([])
   const [tareas, setTareas] = useState<MiTareaDTO[]>([])
   const [resumen, setResumen] = useState<MiResumen | null>(null)
+  const [calificaciones, setCalificaciones] = useState<CalificacionDTO[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -19,11 +20,13 @@ export default function VistaEstudiante() {
       api.miCursos(auth.id),
       api.miTareas(auth.id),
       api.miResumen(auth.id),
+      api.calificacionesPorEstudiante(auth.id),
     ])
-      .then(([c, t, r]) => {
+      .then(([c, t, r, cal]) => {
         setCursos(c.cursos)
         setTareas(t.tareas)
         setResumen(r)
+        setCalificaciones(cal.calificaciones)
       })
       .catch((e) => setError(e instanceof Error ? e.message : 'Error al cargar datos'))
       .finally(() => setLoading(false))
@@ -40,6 +43,12 @@ export default function VistaEstudiante() {
   const primerNombre = auth.nombres.split(' ')[0]
   const tareasPendientes = tareas.filter((t) => new Date(t.fecha_limite) >= new Date())
   const proximaClase = cursos[0]
+  
+  // Calcular promedio real basado en calificaciones
+  const conNota = calificaciones.filter((c) => c.puntaje != null)
+  const promedio = conNota.length > 0
+    ? conNota.reduce((a, b) => a + (b.puntaje ?? 0), 0) / conNota.length
+    : 0
 
   return (
     <div className="flex flex-col gap-4">
@@ -65,7 +74,7 @@ export default function VistaEstudiante() {
           bg="#FEE2E2"
           iconColor="#C8102E"
           label="Promedio actual"
-          value={loading ? '—' : '15.3 / 20'}
+          value={loading ? '—' : `${promedio.toFixed(1)} / 20`}
         />
         <Stat
           icon={FileText}
