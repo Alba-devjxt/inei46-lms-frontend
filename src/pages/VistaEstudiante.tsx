@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Bell, Trophy, FileText, CalendarCheck, BookOpen, AlarmClock, MapPin, Book } from 'lucide-react'
-import { api, loadAuth, type MiCurso, type MiResumen, type MiTareaDTO, type CalificacionDTO } from '../lib/api'
+import { api, loadAuth, type MiCurso, type MiResumen, type MiTareaDTO, type CalificacionDTO, type NotificacionDTO } from '../lib/api'
 
 const COLORES_CURSO = ['#C8102E', '#1A1A1A', '#C8102E', '#1A1A1A']
 
@@ -43,6 +44,34 @@ export default function VistaEstudiante() {
   const primerNombre = auth.nombres.split(' ')[0]
   const tareasPendientes = tareas.filter((t) => new Date(t.fecha_limite) >= new Date())
   const proximaClase = cursos[0]
+  const navigate = useNavigate()
+
+  const [notifications, setNotifications] = useState<NotificacionDTO[]>([])
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [loadingNotifs, setLoadingNotifs] = useState(false)
+  const [errorNotifs, setErrorNotifs] = useState<string | null>(null)
+
+  const loadNotifications = () => {
+    if (!auth) return
+    setLoadingNotifs(true)
+    setErrorNotifs(null)
+    api.notificaciones(auth.id)
+      .then((r) => {
+        setNotifications(r.notificaciones || [])
+        setUnreadCount(r.no_leidas || 0)
+      })
+      .catch((err) => {
+        console.error('Error cargando notificaciones:', err)
+        setErrorNotifs(err instanceof Error ? err.message : 'Error al cargar notificaciones')
+      })
+      .finally(() => setLoadingNotifs(false))
+  }
+
+  useEffect(() => {
+    if (!menuOpen) return
+    loadNotifications()
+  }, [menuOpen, auth])
   
   // Calcular promedio real basado en calificaciones
   const conNota = calificaciones.filter((c) => c.puntaje != null)
@@ -57,9 +86,91 @@ export default function VistaEstudiante() {
           <h1 className="text-[22px] font-bold text-[#1A1A1A]">Hola, {primerNombre}</h1>
           <p className="text-xs text-gray-600">Bienvenido(a) de vuelta a tu aula virtual</p>
         </div>
-        <button className="h-9 w-9 grid place-items-center rounded-lg bg-white border border-border-soft text-gray-600 hover:text-[#1A1A1A]">
-          <Bell size={16} />
-        </button>
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setMenuOpen((s) => !s)}
+            className="h-9 w-9 grid place-items-center rounded-lg bg-white border border-border-soft text-gray-600 hover:text-[#1A1A1A] relative"
+          >
+            <Bell size={16} />
+            {unreadCount > 0 && (
+              <span className="absolute -right-1 -top-1 min-h-[18px] min-w-[18px] rounded-full bg-inei-600 px-1.5 text-[10px] font-semibold text-white flex items-center justify-center">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
+          </button>
+
+          {menuOpen && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
+              <div className="absolute right-0 top-full z-20 mt-3 w-96 rounded-3xl border border-border-soft bg-white shadow-lg max-h-[500px] flex flex-col overflow-hidden">
+                <div className="px-4 py-3 border-b border-border-soft bg-gray-50 flex-shrink-0">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-[#1A1A1A]">Notificaciones</p>
+                      <p className="text-xs text-gray-500">{unreadCount} sin leer</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={loadNotifications}
+                      disabled={loadingNotifs}
+                      className="text-xs text-inei-600 hover:text-inei-700 disabled:opacity-50"
+                    >
+                      Actualizar
+                    </button>
+                  </div>
+                </div>
+                <div className="overflow-y-auto flex-1">
+                  {errorNotifs && (
+                    <div className="p-4 text-sm text-red-600 bg-red-50">{errorNotifs}</div>
+                  )}
+                  {loadingNotifs && notifications.length === 0 && (
+                    <div className="p-4 text-sm text-gray-500 text-center">Cargando...</div>
+                  )}
+                  {!loadingNotifs && notifications.length === 0 && !errorNotifs && (
+                    <div className="p-6 text-center text-sm text-gray-500">No hay notificaciones nuevas.</div>
+                  )}
+                  {notifications.map((notification) => (
+                    <div
+                      key={notification.id}
+                      onClick={async () => {
+                        if (!notification.leido) {
+                          try { await api.marcarNotificacionLeida(notification.id) } catch (e) { console.error(e) }
+                        }
+                        const tipo = notification.tipo || ''
+                        if (tipo.startsWith('evaluacion:')) {
+                          const parts = tipo.split(':')
+                          const id = Number(parts[1])
+                          if (!Number.isNaN(id) && id > 0) {
+                            navigate(`/estudiante/evaluaciones/${id}/rendir`)
+                          } else {
+                            navigate('/estudiante/tareas')
+                          }
+                        } else if (tipo === 'evaluacion') {
+                          navigate('/estudiante/tareas')
+                        } else {
+                          navigate('/estudiante/tareas')
+                        }
+                        setMenuOpen(false)
+                        loadNotifications()
+                      }}
+                      className={`px-4 py-3 border-b border-border-soft cursor-pointer hover:bg-gray-50 transition-colors ${notification.leido ? 'bg-white' : 'bg-[#FFF5F5]'}`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <p className="text-sm font-semibold text-[#1A1A1A]">{notification.titulo}</p>
+                          <p className="mt-2 text-sm text-[#2E2E2E]">{notification.mensaje}</p>
+                        </div>
+                        {!notification.leido && <div className="w-2 h-2 rounded-full bg-inei-600 flex-shrink-0 mt-1" />}
+                      </div>
+                      <p className="mt-1 text-xs text-gray-400">{new Date(notification.fecha_envio).toLocaleString('es-PE')}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {error && (
