@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Plus, X, Trash2, Clock, MapPin, GraduationCap, BookOpen } from 'lucide-react'
+import { Plus, X, Trash2, Clock, GraduationCap, BookOpen } from 'lucide-react'
 import { api, type AsignacionDTO, type CursoDTO, type UsuarioBreve } from '../lib/api'
 
 const DIAS = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes']
