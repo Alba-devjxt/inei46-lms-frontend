@@ -1,5 +1,4 @@
-import { Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { Outlet, useLocation } from 'react-router-dom'
 import {
   House,
   BookOpen,
@@ -9,7 +8,6 @@ import {
   Bell,
 } from 'lucide-react'
 import Sidebar, { type NavItem } from '../components/Sidebar'
-import { api, loadAuth, type NotificacionDTO } from '../lib/api'
 
 const studentNav: NavItem[] = [
   { to: '/estudiante', icon: House, label: 'Inicio' },
@@ -22,9 +20,7 @@ const studentNav: NavItem[] = [
 
 export default function StudentLayout() {
   const location = useLocation()
-  const navigate = useNavigate()
   const breadcrumb = studentNav.find((n) => location.pathname.startsWith(n.to))?.label ?? 'Inicio'
-  const auth = loadAuth()
 
   return (
     <div className="flex h-screen w-screen bg-surface-muted overflow-hidden">

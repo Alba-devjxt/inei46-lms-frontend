@@ -42,7 +42,7 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-2xl p-5 flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-bold text-[#1A1A1A]">Cursos más activos</h2>
-            <span className="text-[11px] text-gray-400">Top 5 por estudiantes</span>
+            <span className="text-[11px] text-gray-400">Top 3 por estudiantes</span>
           </div>
           {data?.cursos.slice(0, 5).map((c) => (
             <div key={c.id} className="flex items-center gap-3">
