@@ -1,4 +1,5 @@
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import {
   House,
   BookOpen,
@@ -8,6 +9,7 @@ import {
   Bell,
 } from 'lucide-react'
 import Sidebar, { type NavItem } from '../components/Sidebar'
+import { api, loadAuth, type NotificacionDTO } from '../lib/api'
 
 const studentNav: NavItem[] = [
   { to: '/estudiante', icon: House, label: 'Inicio' },
@@ -19,6 +21,11 @@ const studentNav: NavItem[] = [
 ]
 
 export default function StudentLayout() {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const breadcrumb = studentNav.find((n) => location.pathname.startsWith(n.to))?.label ?? 'Inicio'
+  const auth = loadAuth()
+
   return (
     <div className="flex h-screen w-screen bg-surface-muted overflow-hidden">
       <Sidebar
@@ -27,7 +34,17 @@ export default function StudentLayout() {
         items={studentNav}
       />
       <main className="flex-1 overflow-auto">
-        <div className="px-8 py-6 flex flex-col gap-4">
+        <div className="px-8 py-6 flex flex-col gap-4 relative">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-1.5 text-xs">
+              <span className="text-gray-400">Inicio</span>
+              <span className="text-gray-400">/</span>
+              <span className="font-semibold text-[#1A1A1A]">{breadcrumb}</span>
+            </div>
+            <div className="flex items-center gap-2.5 relative">
+              {/* Notificaciones implementadas en la vista del estudiante para evitar duplicados */}
+            </div>
+          </div>
           <Outlet />
         </div>
       </main>
