@@ -25,7 +25,7 @@ export default function AdminDashboard() {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold text-[#1A1A1A]">Dashboard</h1>
+        <h1 className="text-2xl font-bold text-[#1A1A1A]">Dashboard Newest</h1>
         <p className="text-sm text-gray-600">
           Resumen general del periodo académico 2026 - I
         </p>
