@@ -26,7 +26,7 @@ export default function AdminDocentes() {
     <div className="flex flex-col gap-5">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-bold text-[#1A1A1A]">Docentes</h1>
+          <h1 className="text-2xl font-bold text-[#1A1A1A]">Nuevos Docentes</h1>
           <p className="text-sm text-gray-600">
             {docentes.length} docentes asignados a cursos del periodo 2026 - I
           </p>
